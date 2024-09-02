@@ -1,0 +1,31 @@
+{
+  "name": "npm-packs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "npm-packs": "./index.js"
+  },
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "keywords": [
+    "npm",
+    "pack",
+    "cli",
+    "tgz",
+    "tool"
+  ],
+  "author": "Ms-150",
+  "license": "MIT",
+  "description": "A CLI tool to run npm pack and store the .tgz file in the packs directory",
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
