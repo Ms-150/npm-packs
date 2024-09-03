@@ -18,27 +18,31 @@ program
     "List all dependencies and create npm pack in the specified directory"
   )
   .option("-o, --output <directory>", "Specify the output directory", "packs")
+  .option(
+    "-i, --ignore <packages>",
+    "Specify packages to ignore (comma-separated)",
+    ""
+  )
   .action((options) => {
     const outputDir = path.isAbsolute(options.output)
       ? options.output
-      : path.join(__dirname, options.output);
+      : path.join(process.cwd(), options.output);
 
-    const node_modules = path.join(__dirname, "node_modules");
+    const node_modules = path.join(process.cwd(), "node_modules");
 
-    if (fs.existsSync(outputDir)) {
-      const files = fs.readdirSync(outputDir);
-
-      if (files.length > 0) {
-        console.error(`Error: The directory ${outputDir} is not empty.`);
-        process.exit(1);
-      }
-    } else {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
+    const defaultIgnorePackages = ["npm-packs"];
+    const ignorePackages = options.ignore
+      ? defaultIgnorePackages.concat(options.ignore.split(","))
+      : defaultIgnorePackages;
 
     const dirs = fs.readdirSync(node_modules).filter((dir) => {
-      return !dir.startsWith(".");
+      return !dir.startsWith(".") && !ignorePackages.includes(dir);
     });
+
+    if (dirs.length === 0) {
+      console.log("No modules to pack.");
+      process.exit(0);
+    }
 
     let tgzCount = 0;
 
@@ -55,6 +59,9 @@ program
         const destinationPath = path.join(outputDir, tgzFileName);
 
         if (fs.existsSync(tgzFilePath)) {
+          if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+          }
           fs.renameSync(tgzFilePath, destinationPath);
           console.log(`Moved ${tgzFileName} to ${outputDir}`);
           tgzCount++;
@@ -63,7 +70,14 @@ program
         console.error(`Error packing module: ${modulePath}`, error.message);
       }
     });
-    console.log(`Total .tgz files created: ${tgzCount}`);
+
+    if (tgzCount === 0 && fs.existsSync(outputDir)) {
+      fs.rmdirSync(outputDir);
+      console.log(`No .tgz files were created. Removed empty directory: ${outputDir}`);
+    } else {
+      console.log("-----");
+      console.log(`Total .tgz files created: ${tgzCount}`);
+    }
   });
 
 program
@@ -73,7 +87,7 @@ program
   .action((options) => {
     const outputDir = path.isAbsolute(options.output)
       ? options.output
-      : path.join(__dirname, options.output);
+      : path.join(process.cwd(), options.output);
 
     if (fs.existsSync(outputDir)) {
       let deletedCount = 0;
@@ -85,7 +99,13 @@ program
           deletedCount++;
         }
       });
-      console.log(`Total .tgz files deleted: ${deletedCount}`);
+
+      if (deletedCount === 0) {
+        console.log("No .tgz files found to delete.");
+      } else {
+        console.log("-----");
+        console.log(`Total .tgz files deleted: ${deletedCount}`);
+      }
     } else {
       console.log(`The directory ${outputDir} does not exist.`);
     }

@@ -1,6 +1,6 @@
 {
   "name": "npm-packs",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "main": "index.js",
   "bin": {
     "npm-packs": "./index.js"
